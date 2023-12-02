@@ -1,0 +1,226 @@
+﻿@model CTBookerPro.Models.Booking
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<h2>Create</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+<div class="form-horizontal">
+    <h4>Booking</h4>
+    <hr />
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div id='calendar'></div>
+
+    <div id="availabilityMessage" class="text-danger"></div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Date, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.TextBoxFor(model => model.Date, "{0:yyyy-MM-dd}", new { @class = "form-control", @type = "date", @id = "bookingDate" })
+            @Html.ValidationMessageFor(model => model.Date, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Location, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.Location, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Location, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.Label("Doctor", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.DropDownList("DoctorId", (SelectList)ViewBag.DoctorList, "Select a doctor", new { @class = "form-control", @id = "doctorDropdown" })
+        </div>
+    </div>
+
+    <canvas id="bookingPieChart" width="200" height="200"></canvas>
+
+    <div id="doctorRatingDisplay"></div>
+
+    <div class="form-group">
+        @Html.Label("Doctor Rating", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.DropDownList("DoctorRating", new List<SelectListItem>
+            {
+                new SelectListItem { Text = "1", Value = "1.0" },
+                new SelectListItem { Text = "2", Value = "2.0" },
+                new SelectListItem { Text = "3", Value = "3.0" },
+                new SelectListItem { Text = "4", Value = "4.0" },
+                new SelectListItem { Text = "5", Value = "5.0" },
+            }, "Select a rating", new { @class = "form-control" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Create" class="btn btn-default" id="submitButton" />
+        </div>
+    </div>
+</div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/fullcalendar")
+    @Styles.Render("~/bundles/fullcalendarcss")
+    <script src="~/Scripts/chart.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var selectedDoctorId;
+            var pieChart;
+
+            initDropdownListeners();
+            initCalendar();
+            initSubmitButtonListener();
+
+            function initDropdownListeners() {
+                $('#doctorDropdown').change(function () {
+                    selectedDoctorId = $(this).val();
+                    updateCalendarForDoctor(selectedDoctorId);
+                    if (selectedDoctorId && selectedDoctorId !== '') {
+                        fetchDoctorBookingShare();
+                    } else if (pieChart) {
+                        pieChart.destroy();
+                    }
+                });
+            }
+
+            function updateCalendarForDoctor(doctorId) {
+                $('#calendar').fullCalendar('refetchEvents');
+            }
+
+            function initCalendar() {
+                $('#calendar').fullCalendar({
+                    height: 400,
+                    defaultView: 'month',
+                    events: fetchDoctorAppointments,
+                    dayClick: handleDayClick
+                });
+            }
+
+            function fetchDoctorAppointments(start, end, timezone, callback) {
+                $.ajax({
+                    url: '/Bookings/GetDoctorAppointments',
+                    dataType: 'json',
+                    data: { doctorId: selectedDoctorId },
+                    success: function (doc) {
+                        callback(doc);
+                    }
+                });
+            }
+
+            function handleDayClick(date, jsEvent, view) {
+                if (!selectedDoctorId) {
+                    alert("Please select a doctor from the dropdown first.");
+                    return;
+                }
+                var selectedDate = date.format();
+                checkAvailability(selectedDate);
+            }
+
+            function checkAvailability(selectedDate) {
+                $.ajax({
+                    url: "/Bookings/CheckAvailability",
+                    type: "GET",
+                    data: { doctorId: selectedDoctorId, date: selectedDate },
+                    success: function (data) {
+                        handleAvailabilityResponse(data, selectedDate);
+                    }
+                });
+            }
+
+            function handleAvailabilityResponse(data, selectedDate) {
+                if (data.isAvailable) {
+                    $("#bookingDate").val(selectedDate);
+                    $("#availabilityMessage").text("");
+                } else {
+                    $("#availabilityMessage").text("Doctor is already booked on this date");
+                    $("#bookingDate").val("");
+                }
+            }
+
+            function initSubmitButtonListener() {
+                $("#submitButton").click(function (e) {
+                    var selectedDate = $("#bookingDate").val();
+                    if (!selectedDoctorId) {
+                        alert("Please select a doctor from the calendar.");
+                        return;
+                    }
+                    if (!selectedDate) {
+                        alert("Please select a valid date from the calendar.");
+                        return;
+                    }
+                    $("#bookingForm").submit();
+                });
+            }
+
+            function fetchDoctorBookingShare() {
+                $.ajax({
+                    url: '/Bookings/GetDoctorBookingShare',
+                    method: 'GET',
+                    data: { doctorId: selectedDoctorId },
+                    success: function (data) {
+                        renderBookingPieChart(data);
+                    }
+                });
+            }
+
+            function renderBookingPieChart(data) {
+                var ctx = document.getElementById('bookingPieChart').getContext('2d');
+                var labels = ["Selected Doctor's Bookings", "Other Doctors' Bookings"];
+                var values = [data.DoctorShare, data.OtherShare];
+
+                if (pieChart) {
+                    pieChart.destroy();
+                }
+
+                pieChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: ['#36A2EB', '#E7E9ED']
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        },
+                        onClick: function (evt, elements) {
+                            console.log("Doctor rating:", data.Rating); 
+                            $("#doctorRatingDisplay").html("The doctor rating is " + parseFloat(data.Rating).toFixed(1));
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+

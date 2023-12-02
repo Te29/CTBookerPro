@@ -1,0 +1,27 @@
+﻿@model IEnumerable<CTBookerPro.Models.Booking>
+
+<h2>Booking Report</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Location</th>
+            <th>Doctor</th>
+            <th>Rating</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Date.ToShortDateString()</td>
+                <td>@item.Description</td>
+                <td>@item.Location</td>
+                <td>@item.Doctor.DoctorName</td>
+                <td>@item.Doctor.Rating.ToString("F2")</td>
+            </tr>
+        }
+    </tbody>
+</table>

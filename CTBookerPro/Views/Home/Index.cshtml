@@ -1,0 +1,82 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="banner">
+    <img src="~/Content/picture/ct-2000-x-1333.png" alt="CT scan" class="banner-bg" />
+    <div class="banner-content">
+        <h2>Welcome to CTBooker Pro</h2>
+        <p>Your go-to platform for CT scan appointments and information.</p>
+    </div>
+</div>
+
+<style>
+    .banner {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .banner-bg {
+        width: 50%;
+        height: auto;
+    }
+
+    .banner-content {
+        flex: 1;
+        background-color: rgba(173, 216, 230, 1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 15px;
+    }
+
+        .banner-content h2 {
+            margin: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .banner-content p {
+            margin: 5px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+
+    .row > .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+</style>
+
+
+
+<main>
+    <section class="row" aria-labelledby="aspnetTitle">
+        <h1 id="title">CTBooker Pro</h1>
+        <p class="lead">This application serves both patients and medical professionals by providing access to CT scan information, enabling patients to schedule appointments, consult with medical staff, and find hospital and doctor profiles.</p>
+        <p><a href="~/Home/About" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
+    </section>
+
+    <div class="row">
+        <section class="col-md-4" aria-labelledby="bookingTitle">
+            <h2 id="bookingTitle">Booking an Appointment</h2>
+            <p>
+                Use the 'Book an Appointment' function to easily schedule your CT scan appointment with just a few clicks. Simply tap this button, select your preferred date and time, and choose a convenient location or medical professional.
+            </p>
+            <p><a class="btn btn-outline-dark" href="~/Bookings/Create">Booking Now &raquo;</a></p>
+        </section>
+
+        <section class="col-md-4" aria-labelledby="contactTitle">
+            <h2 id="contactTitle">Contact Us</h2>
+            <p>Have a question or need to consult with a doctor? Our 'Contact Us' function is here to help. Tap this button to send an email directly to our medical staff.</p>
+            <p><a class="btn btn-outline-dark" href="~/Home/Contact">Send an Email &raquo;</a></p>
+        </section>
+
+        <section class="col-md-4" aria-labelledby="FAQTitle">
+            <h2 id="FAQTitle">FAQ</h2>
+            <p>Explore our 'FAQ' function to find answers to commonly asked questions. Tap this button to access a curated list of frequently asked questions and their corresponding answers.</p>
+            <p><a class="btn btn-outline-dark" href="https://www.iaea.org/resources/rpop/health-professionals/radiology/computed-tomography/optimization">Check FAQ &raquo;</a></p>
+        </section>
+    </div>
+</main>
